@@ -19,13 +19,37 @@
           請上傳你要濾鏡的圖片
           <br>圖片格式限制jpg/png
         </p>
-        <v-file-input
-          :rules="rules"
+        <v-row class="text-center">
+      <v-col cols="11">
+         <v-file-input
+          id="file"
+          ref="upload"
+          type="file"
           accept="image/png, image/jpeg, image/bmp"
           placeholder="Pick an image"
           prepend-icon="mdi-camera"
           label="圖片"
+          @change="showImage"
         ></v-file-input>
+      </v-col>
+       <v-col cols="1">
+         <v-btn
+          :loading="loading3"
+          :disabled="loading3"
+          color="blue-grey"
+          class="ma-2 white--text"
+          @click="uploadFile()"
+        >
+          <v-icon
+            right
+            dark
+          >
+            mdi-cloud-upload
+          </v-icon>
+        </v-btn>
+      </v-col>
+      </v-row>
+      
       </v-col>
 
     </v-row>
@@ -100,6 +124,7 @@
 
 <script>
 import axios from 'axios'
+const BASE_URL = 'http://localhost:8080';
 export default {
     name: 'FilterGallery',
 
@@ -108,18 +133,53 @@ export default {
       final:'/images/Final1.jpg',
       sigma: 0,
       phie:0,
-      tau:0
+      tau:0,
+      loading3: false,
     }),
+    watch: {
+      loader () {
+        const l = this.loader
+        this[l] = !this[l]
+
+        setTimeout(() => (this[l] = false), 3000)
+
+        this.loader = null
+      },
+    },
     methods:{
-      uploadFile(){
-        axios.get(`/api/interaction/pushList`)
+      showImage(file) {
+        const formData = new FormData()
+        formData.append('fileImage',file)
+         axios.post(`http://127.0.0.1:3000/upload`,formData,{headers: {'Content-Type': 'multipart/form-data'}})
         .then(res =>{
           console.log(res)
         })
         .catch(err =>{
           window.console.log(err)
         })
+      },
+      uploadFile(){
+        // const formData = new FormData()
+        
+        axios.get(`http://127.0.0.1:3000/`)
+        .then(res =>{
+          console.log(res)
+        })
+        .catch(err =>{
+          window.console.log(err)
+        })
+      },
+      uploadImage (formData) {
+        const url = `${BASE_URL}/photos/upload`;
+        return axios.post(url, formData)
+        // get data
+        .then(x => x.data)
+        // add url field
+        .then(x => x.map(img => Object.assign({},
+            img, { url: `${BASE_URL}/images/${img.id}` })));
+
       }
+      
       
     }
   }
