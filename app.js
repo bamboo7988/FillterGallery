@@ -3,11 +3,13 @@ const fileUpload = require('express-fileupload');
 const app = express();
 const frontApp = express();
 const port = 3000;
-var frontPort = 8080; 
+var frontPort = 8000; 
 var path = require('path');
 
 // default options
 app.use(fileUpload());
+frontApp.use(express.static(path.join(__dirname)));
+console.log(path.join(__dirname))
 
 app.use((req, res, next) => {
     // Websiteyouwishtoallowtoconnect
@@ -42,14 +44,14 @@ app.post('/upload', function(req, res) {
   let sampleFile = req.files.fileImage;
 
   // Use the mv() method to place the file somewhere on your server
-  sampleFile.mv('./public/images/filename.jpg', function(err) {
+  sampleFile.mv('./public/upload/filename.jpg', function(err) {
     if (err)
       return res.status(500).send(err);
     res.send('File uploaded!');
   });
 });
 
-app.post('/', function (req, res, next) {
+app.post('/', function (req, res) {
     res.send('Hello World');
 });
 app.get('/call/python', pythonProcess)
@@ -73,7 +75,7 @@ function pythonProcess(req, res) {
 
 } 
 
-frontApp.get('/',function (req, res, next) {
+frontApp.get('/',function (req, res) {
     res.sendFile(path.join(__dirname + '/dist/index.html'));
 });
 

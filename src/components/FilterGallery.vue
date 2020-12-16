@@ -20,34 +20,18 @@
           <br>圖片格式限制jpg/png
         </p>
         <v-row class="text-center">
-      <v-col cols="11">
-         <v-file-input
-          id="file"
-          ref="upload"
-          type="file"
-          accept="image/png, image/jpeg, image/bmp"
-          placeholder="Pick an image"
-          prepend-icon="mdi-camera"
-          label="圖片"
-          @change="showImage"
-        ></v-file-input>
-      </v-col>
-       <v-col cols="1">
-         <v-btn
-          :loading="loading3"
-          :disabled="loading3"
-          color="blue-grey"
-          class="ma-2 white--text"
-          @click="uploadFile()"
-        >
-          <v-icon
-            right
-            dark
-          >
-            mdi-cloud-upload
-          </v-icon>
-        </v-btn>
-      </v-col>
+        <v-col cols="12">
+          <v-file-input
+            id="file"
+            ref="upload"
+            type="file"
+            accept="image/png, image/jpeg, image/bmp"
+            placeholder="Pick an image"
+            prepend-icon="mdi-camera"
+            label="圖片"
+            @change="showImage"
+          ></v-file-input>
+        </v-col>
       </v-row>
       
       </v-col>
@@ -129,7 +113,7 @@ export default {
     name: 'FilterGallery',
 
     data: () => ({
-      original:'/images/Final1.jpg',
+      original:'/upload/filename.jpg',
       final:'/images/Final1.jpg',
       sigma: 0,
       phie:0,
@@ -146,6 +130,11 @@ export default {
         this.loader = null
       },
     },
+    computed: {
+      getImageUrl: function() {
+        return + this.photo;
+      }
+    },
     methods:{
       showImage(file) {
         const formData = new FormData()
@@ -153,6 +142,7 @@ export default {
          axios.post(`http://127.0.0.1:3000/upload`,formData,{headers: {'Content-Type': 'multipart/form-data'}})
         .then(res =>{
           console.log(res)
+          this.$forceUpdate();
         })
         .catch(err =>{
           window.console.log(err)
@@ -164,6 +154,7 @@ export default {
         axios.get(`http://127.0.0.1:3000/`)
         .then(res =>{
           console.log(res)
+          this.original='/images/filename.jpg'
         })
         .catch(err =>{
           window.console.log(err)
