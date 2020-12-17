@@ -51,14 +51,23 @@
             </v-img>
               <v-card-text>
                 <v-container fluid>
+                  <v-row>
+                    <v-col
+                    class='text-h5'>
+                    數值調整
+                    </v-col>
+                  </v-row>
                 <v-row>
                     <v-col cols="12">
                       <v-slider
                         v-model="sigma"
-                        max="50"
-                        min="-50"
-                        thumb-label="always"
+                        step="10"
+                        ticks="always"
+                        tick-size="4"
                         label="SIGMA"
+                        color="blue-grey"
+                        track-color="grey"
+                        thumb-label
                       ></v-slider>
                     </v-col>
                 </v-row>
@@ -66,10 +75,13 @@
                     <v-col cols="12">
                       <v-slider
                         v-model="phie"
-                        max="50"
-                        min="-50"
-                        thumb-label="always"
+                        step="10"
+                        ticks="always"
+                        tick-size="4"
                         label="PHIE"
+                        color="blue-grey"
+                        track-color="grey"
+                        thumb-label
                       ></v-slider>
                     </v-col>
                   </v-row>
@@ -77,12 +89,36 @@
                     <v-col cols="12">
                       <v-slider
                           v-model="tau"
-                          max="50"
-                          min="-50"
-                          thumb-label="always"
+                          step="10"
+                          ticks="always"
+                          tick-size="4"
                           label="TAU"
+                          color="blue-grey"
+                          track-color="grey"
+                          thumb-label
                         ></v-slider>
                     </v-col>
+                </v-row>
+                <v-row>
+                  <v-col>
+                    <v-btn
+                      block
+                      x-large
+                      :loading="loading"
+                      :disabled="loading"
+                      color="blue-grey"
+                      class="ma-2 white--text text-h5"
+                      @click="caculate"
+                    >
+                      運算
+                      <v-icon
+                        right
+                        dark
+                      >
+                        mdi-cloud-upload
+                      </v-icon>
+                    </v-btn>
+                  </v-col>
                 </v-row>
                 </v-container>
                 </v-card-text>
@@ -108,7 +144,7 @@
 
 <script>
 import axios from 'axios'
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'http://localhost:3000';
 export default {
     name: 'FilterGallery',
 
@@ -118,18 +154,8 @@ export default {
       sigma: 0,
       phie:0,
       tau:0,
-      loading3: false,
+      loading: false,  
     }),
-    watch: {
-      loader () {
-        const l = this.loader
-        this[l] = !this[l]
-
-        setTimeout(() => (this[l] = false), 3000)
-
-        this.loader = null
-      },
-    },
     computed: {
       getImageUrl: function() {
         return + this.photo;
@@ -148,38 +174,21 @@ export default {
           window.console.log(err)
         })
       },
-      uploadFile(){
-        // const formData = new FormData()
-        
-        axios.get(`http://127.0.0.1:3000/`)
+      caculate() {
+        console.log('caculate')
+        this.loading = true
+        axios.get(`${BASE_URL}/call/python?sigma=${this.sigma}&phie=${this.phie}&tau=${this.tau}`)
         .then(res =>{
-          console.log(res)
-          this.original='/images/filename.jpg'
-        })
-        .catch(err =>{
-          window.console.log(err)
-        })
-      },
-      uploadImage (formData) {
-        const url = `${BASE_URL}/photos/upload`;
-        return axios.post(url, formData)
-        // get data
-        .then(x => x.data)
-        // add url field
-        .then(x => x.map(img => Object.assign({},
-            img, { url: `${BASE_URL}/images/${img.id}` })));
-      },
-      caculate () {
-        axios.get(`http://127.0.0.1:3000/call/python`)
-        .then(res =>{
-          console.log(res)
-          this.original='/images/filename.jpg'
+          console.log(res.data)
+          if(res.statusText==='OK'){
+            this.loading = false
+            this.$forceUpdate();
+          }
         })
         .catch(err =>{
           window.console.log(err)
         })
       }
-      
       
     }
   }

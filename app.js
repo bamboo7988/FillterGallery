@@ -58,14 +58,15 @@ app.get('/call/python', pythonProcess)
 
 function pythonProcess(req, res) {
 
-  console.log(`name: ${req.query.name}, from: ${req.query.from}`)
+  console.log(`sigma: ${req.query.sigma}, phie: ${req.query.phie}, tau: ${req.query.tau}`)
 
   let spawn = require("child_process").spawn
 
   let process = spawn('python', [
-    "./imageCalculate.py",
-    req.query.name,
-    req.query.from
+    "./imageCalculateTest.py",
+    req.query.sigma,
+    req.query.phie,
+    req.query.tau
   ])
 
   process.stdout.on('data', (data) => {
