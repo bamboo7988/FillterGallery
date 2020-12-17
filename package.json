@@ -12,6 +12,7 @@
     "axios": "^0.21.0",
     "child_process": "^1.0.2",
     "core-js": "^3.6.5",
+    "cs2": "^2.0.0-beta8",
     "express": "^4.17.1",
     "express-fileupload": "^1.2.0",
     "vue": "^2.6.11",

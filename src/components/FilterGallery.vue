@@ -114,7 +114,7 @@ export default {
 
     data: () => ({
       original:'/upload/filename.jpg',
-      final:'/images/Final1.jpg',
+      final:'/images/final.jpg',
       sigma: 0,
       phie:0,
       tau:0,
@@ -168,7 +168,16 @@ export default {
         // add url field
         .then(x => x.map(img => Object.assign({},
             img, { url: `${BASE_URL}/images/${img.id}` })));
-
+      },
+      caculate () {
+        axios.get(`http://127.0.0.1:3000/call/python`)
+        .then(res =>{
+          console.log(res)
+          this.original='/images/filename.jpg'
+        })
+        .catch(err =>{
+          window.console.log(err)
+        })
       }
       
       
