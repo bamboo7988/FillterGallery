@@ -12,22 +12,40 @@ import requests
 import sys
 
 
+params = {
+    'sigmaBF': int(sys.argv[1]),
+    'phieqCQ': int(sys.argv[2]),
+    'sigmaDE': int(sys.argv[3]),
+}
+
+def variableCalculate(percentage, max, reverse):
+    if reverse:
+        if percentage == 100:
+            return 1
+        elif percentage > 0:
+            return (1-percentage/100)*max
+        else:
+            return max
+    else:
+        if percentage > 0:
+            return percentage / 100 * max
+        else:
+            return 1
+
 # Parameters
 filepath = "./public/upload/filename.jpg"
 
 # Bilateral filter
-s = 8 #Diameter of each pixel neighborhood that is used during filtering
-sigmacolor = sigmaspace = 20 #[0, 20]
+s = 8
+sigmacolor = sigmaspace = variableCalculate(params['sigmaBF'], 20, False)
 
 # Color quantization
-phieq = 30 # [0, 40] controls sharpness of the trasition from one bin to another
-# when dealing with faces/fine details, use phieq=2
+phieq = variableCalculate(params['phieqCQ'], 40, False)
 
 # Dog edge detection
-sigma = 0.5 # Gaussian sigma [0,, 4]
+sigma = variableCalculate(params['sigmaDE'], 4, True)
 phie = 5  # typically [0.75,5] controls the sharpness of the activation falloff
 tau = 0.981 # typically [0,1] control the center-sourround difference required for cell activation
-
 
 def loadingImage():
     rgb = io.imread('./public/upload/filename.jpg')
@@ -59,7 +77,7 @@ def loadingImage():
         for j in range(n1):
             pixel[j,i] = int(255*rgbBF[i,j,0]),int(255*rgbBF[i,j,1]),int(255*rgbBF[i,j,2])
 
-    imageio.imwrite('bilateral filtered image.jpg',ImgBF)
+    # imageio.imwrite('bilateral filtered image.jpg',ImgBF)
 
     def qnearest(f):
         q=0
@@ -108,7 +126,7 @@ def loadingImage():
         for j in range(n1):
             pixel[j,i]=int(255*rgbCQ[i,j,0]),int(255*rgbCQ[i,j,1]),int(255*rgbCQ[i,j,2])
 
-    imageio.imwrite('color quantized image.jpg',imgCQ)
+    # imageio.imwrite('color quantized image.jpg',imgCQ)
 
     def gauss2D(shape,sigma):
         m,n = [(ss-1.)/2. for ss in shape]
@@ -130,7 +148,7 @@ def loadingImage():
                 D[i,j] = 1 + tanh((imge[i,j] - tau * imgr[i,j]) * phie)
 
 
-    imageio.imwrite('edges.jpg',D)
+    # imageio.imwrite('edges.jpg',D)
 
     lab3 = lab
     lab3[:,:,0] = L
@@ -159,9 +177,9 @@ def loadingImage():
 loadingImage()
 
 resultList = {
-    'a': sys.argv[1],
-    'b': sys.argv[2],
-    'c':sys.argv[3],
+    'sigmaBF': sigmacolor,
+    'phieqCQ': phieq,
+    'sigmaDE': sigma,
     'isOk': True,
     'message': 'Image calculate success'
 }
