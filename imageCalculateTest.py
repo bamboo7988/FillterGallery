@@ -1,15 +1,22 @@
-import sys 
+import sys
 import json
+# import requests
 
+# result = {
+#     'a': sys.argv[1],
+#     'b': sys.argv[2],
+#     'c':sys.argv[3]
+# }
 result = {
-    'sigma': sys.argv[1],
-    'phie': sys.argv[2],
-    'tau':sys.argv[3]
+    'a': sys.argv[1],
+    'b': sys.argv[2],
+    'c':sys.argv[3],
+    'isOk': True,
+    'message': 'Image calculate success'
 }
-  
 
 json = json.dumps(result)
 
-print(str(json))
+print(json)
 
 sys.stdout.flush()

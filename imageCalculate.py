@@ -3,41 +3,40 @@ import matplotlib.pyplot as plt
 from skimage import io,color
 import numpy as np
 from PIL import Image
-from scipy import misc
+import imageio
 from math import tanh
 from scipy import signal
+import os
+import json
+import requests
+import sys
 
 
 # Parameters
+filepath = "./public/upload/filename.jpg"
+
 # Bilateral filter
-s = 9 #Diameter of each pixel neighborhood that is used during filtering
-sigmacolor = 17
-sigmaspace = 17
+s = 8 #Diameter of each pixel neighborhood that is used during filtering
+sigmacolor = sigmaspace = 20 #[0, 20]
 
 # Color quantization
-phieq = 20 # controls sharpness of the trasition from one bin to another
+phieq = 30 # [0, 40] controls sharpness of the trasition from one bin to another
 # when dealing with faces/fine details, use phieq=2
 
 # Dog edge detection
-sigma = 1 # Gaussian sigma
+sigma = 0.5 # Gaussian sigma [0,, 4]
 phie = 5  # typically [0.75,5] controls the sharpness of the activation falloff
 tau = 0.981 # typically [0,1] control the center-sourround difference required for cell activation
 
 
 def loadingImage():
-    rgb = io.imread('./public/images/filename.jpg')
+    rgb = io.imread('./public/upload/filename.jpg')
     lab = color.rgb2lab(rgb) # img_array, RGB-image = MxNx3
     L, a, b = lab[:,:,0], lab[:,:,1], lab[:,:,2]
     m1, n1 = L.shape
     L0 = np.float32(L)
     D = np.zeros((m1,n1))
 
-    BilateralFiltering(L, a, b, lab, m1, n1)
-    ColorQuantization(L, a, b, lab, m1, n1)
-    DoGEdgeDetection(L0, m1, n1, D)
-    FinalImage(lab, L, a, b, m1, n1, D)
-
-def BilateralFiltering(L, a, b, lab, m1, n1):
     L = np.float32(L)
     a = np.float32(a)
     b = np.float32(b)
@@ -51,20 +50,19 @@ def BilateralFiltering(L, a, b, lab, m1, n1):
     lab1[:,:,0] = L
     lab1[:,:,1] = a
     lab1[:,:,2] = b
-    rgb1 = color.lab2rgb(lab1)
+    rgbBF = color.lab2rgb(lab1)
 
     ImgBF = Image.new( 'RGB', (n1,m1),'black')
     pixel = ImgBF.load()
 
     for i in range(m1):
         for j in range(n1):
-            pixel[j,i] = int(255*rgb1[i,j,0]),int(255*rgb1[i,j,1]),int(255*rgb1[i,j,2])
+            pixel[j,i] = int(255*rgbBF[i,j,0]),int(255*rgbBF[i,j,1]),int(255*rgbBF[i,j,2])
 
-    misc.imsave('bilateral filtered image.jpg',ImgBF)
+    imageio.imwrite('bilateral filtered image.jpg',ImgBF)
 
-
-def ColorQuantization(L, a, b, lab, m1, n1):
     def qnearest(f):
+        q=0
         if f>=0 and f<5:
             q=0
         elif f>=5 and f<15:
@@ -96,23 +94,22 @@ def ColorQuantization(L, a, b, lab, m1, n1):
 
 
     L = Quantum
-    lab1 = lab
+    lab2 = lab
 
-    lab1[:,:,0] = L
-    lab1[:,:,1] = a
-    lab1[:,:,2] = b
+    lab2[:,:,0] = L
+    lab2[:,:,1] = a
+    lab2[:,:,2] = b
 
-    rgb1 = color.lab2rgb(lab1)
+    rgbCQ = color.lab2rgb(lab2)
 
     imgCQ = Image.new( 'RGB', (n1, m1),'black')
     pixel = imgCQ.load()
     for i in range(m1):
         for j in range(n1):
-            pixel[j,i]=int(255*rgb1[i,j,0]),int(255*rgb1[i,j,1]),int(255*rgb1[i,j,2])
+            pixel[j,i]=int(255*rgbCQ[i,j,0]),int(255*rgbCQ[i,j,1]),int(255*rgbCQ[i,j,2])
 
-    misc.imsave('color quantized image.jpg',imgCQ)
+    imageio.imwrite('color quantized image.jpg',imgCQ)
 
-def DoGEdgeDetection(L0, m1, n1, D):
     def gauss2D(shape,sigma):
         m,n = [(ss-1.)/2. for ss in shape]
         y,x = np.ogrid[-m:m+1,-n:n+1]
@@ -125,7 +122,6 @@ def DoGEdgeDetection(L0, m1, n1, D):
     imge = signal.convolve(L0, gauss2D((5,5),sigma), mode = 'same')
     imgr = signal.convolve(L0, gauss2D((5,5),sigma * 1.5), mode = 'same')
 
-    # D = np.zeros((m1,n1))
     for i in range(m1):
         for j in range(n1):
             if imge[i,j] - tau * imgr[i,j] > 0:
@@ -134,15 +130,14 @@ def DoGEdgeDetection(L0, m1, n1, D):
                 D[i,j] = 1 + tanh((imge[i,j] - tau * imgr[i,j]) * phie)
 
 
-    misc.imsave('edges.jpg',D)
+    imageio.imwrite('edges.jpg',D)
 
-def FinalImage(lab, L, a, b, m1, n1, D):
-    lab2 = lab
-    lab2[:,:,0] = L
-    lab2[:,:,1] = a
-    lab2[:,:,2] = b
+    lab3 = lab
+    lab3[:,:,0] = L
+    lab3[:,:,1] = a
+    lab3[:,:,2] = b
 
-    rgb2 = color.lab2rgb(lab2)
+    rgbFinal = color.lab2rgb(lab3)
 
 
     imgFinal = Image.new('RGB', (n1, m1), 'black')
@@ -152,13 +147,27 @@ def FinalImage(lab, L, a, b, m1, n1, D):
             if D[i,j] < 0.1:
                 r = g = b = 255 * D[i,j]
             else:
-                r = 255 * rgb2[i, j, 0]
-                g = 255 * rgb2[i, j, 1]
-                b = 255 * rgb2[i, j, 2]
+                r = 255 * rgbFinal[i, j, 0]
+                g = 255 * rgbFinal[i, j, 1]
+                b = 255 * rgbFinal[i, j, 2]
 
             pixel[j,i] = int(r), int(g), int(b)
 
-    misc.imsave('final.jpg', imgFinal)
+    imageio.imwrite('./public/upload/final.jpg', imgFinal)
 
 
 loadingImage()
+
+resultList = {
+    'a': sys.argv[1],
+    'b': sys.argv[2],
+    'c':sys.argv[3],
+    'isOk': True,
+    'message': 'Image calculate success'
+}
+
+result = json.dumps(resultList, ensure_ascii=False)
+
+print(result)
+
+sys.stdout.flush()

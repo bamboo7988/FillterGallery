@@ -1,10 +1,12 @@
 const express = require('express');
 const fileUpload = require('express-fileupload');
+const fs = require('fs');
 const app = express();
 const frontApp = express();
 const port = 3000;
-var frontPort = 8000; 
+var frontPort = 8000;
 var path = require('path');
+const { stringify } = require('querystring');
 
 // default options
 app.use(fileUpload());
@@ -14,23 +16,23 @@ console.log(path.join(__dirname))
 app.use((req, res, next) => {
     // Websiteyouwishtoallowtoconnect
     res.setHeader("Access-Control-Allow-Origin", "*");
-  
+
     // Requestmethodsyouwishtoallow
     res.setHeader(
       "Access-Control-Allow-Methods",
       "GET,POST,OPTIONS,PUT,PATCH,DELETE"
     );
-  
+
     // Requestheadersyouwishtoallow
     res.setHeader(
       "Access-Control-Allow-Headers",
       "X-Requested-With,content-type"
     );
-  
+
     // Settotrueifyouneedthewebsitetoincludecookiesintherequestssent
     // totheAPI(e.g.incaseyouusesessions)
     res.setHeader("Access-Control-Allow-Credentials", true);
-  
+
     // Passtonextlayerofmiddleware
     next();
   });
@@ -45,10 +47,21 @@ app.post('/upload', function(req, res) {
 
   // Use the mv() method to place the file somewhere on your server
   sampleFile.mv('./public/upload/filename.jpg', function(err) {
-    if (err)
+    if (err){
       return res.status(500).send(err);
+    }
+    if (fs.existsSync('./public/upload/final.jpg')){
+      // Use the unlink() method to delete the existed final file
+      fs.unlink('./public/upload/final.jpg', function(err){
+        if (err){
+          return res.status(500).send(err);
+        }
+      });
+    }
     res.send('File uploaded!');
   });
+
+
 });
 
 app.post('/', function (req, res) {
@@ -63,7 +76,7 @@ function pythonProcess(req, res) {
   let spawn = require("child_process").spawn
 
   let process = spawn('python', [
-    "./imageCalculateTest.py",
+    "./imageCalculate.py",
     req.query.sigma,
     req.query.phie,
     req.query.tau
@@ -71,10 +84,12 @@ function pythonProcess(req, res) {
 
   process.stdout.on('data', (data) => {
     const parsedString = JSON.parse(data)
-    res.json(parsedString)
+    console.log(`stdout: ${data}`)
+    // res.json(parsedString)
+    res.send(parsedString)
   })
 
-} 
+}
 
 frontApp.get('/',function (req, res) {
     res.sendFile(path.join(__dirname + '/dist/index.html'));

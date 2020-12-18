@@ -33,7 +33,7 @@
           ></v-file-input>
         </v-col>
       </v-row>
-      
+
       </v-col>
 
     </v-row>
@@ -127,15 +127,15 @@
         <v-col
           cols="6"
         >
-          <v-card>
+          <v-card v-if="isShow">
             <v-img
               :src="final"
               class="white--text align-end"
-              height="500px"
+              height="400px"
             >
               <v-card-title >運算後圖片</v-card-title>
             </v-img>
-              
+
           </v-card>
         </v-col>
       </v-row>
@@ -150,11 +150,12 @@ export default {
 
     data: () => ({
       original:'/upload/filename.jpg',
-      final:'/images/final.jpg',
+      final:'/upload/final.jpg',
       sigma: 0,
       phie:0,
       tau:0,
-      loading: false,  
+      loading: false,
+      isShow: false,
     }),
     computed: {
       getImageUrl: function() {
@@ -168,6 +169,7 @@ export default {
          axios.post(`http://127.0.0.1:3000/upload`,formData,{headers: {'Content-Type': 'multipart/form-data'}})
         .then(res =>{
           console.log(res)
+          this.visible = false;
           this.$forceUpdate();
         })
         .catch(err =>{
@@ -177,11 +179,13 @@ export default {
       caculate() {
         console.log('caculate')
         this.loading = true
-        axios.get(`${BASE_URL}/call/python?sigma=${this.sigma}&phie=${this.phie}&tau=${this.tau}`)
+        axios.get(`${BASE_URL}/call/python`, {  params: { sigma: this.sigma, phie: this.phie, tau: this.tau} })
         .then(res =>{
+          console.log(res);
           console.log(res.data)
           if(res.statusText==='OK'){
             this.loading = false
+            this.isShow = true
             this.$forceUpdate();
           }
         })
@@ -189,7 +193,7 @@ export default {
           window.console.log(err)
         })
       }
-      
+
     }
   }
 </script>
