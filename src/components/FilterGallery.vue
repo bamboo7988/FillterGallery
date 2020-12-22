@@ -175,7 +175,6 @@ export default {
         })
       },
       caculate() {
-        console.log('caculate')
         this.loading = true
         axios.get(`${BASE_URL}/call/python?sigma=${this.sigma}&phie=${this.phie}&tau=${this.tau}`)
         .then(res =>{
