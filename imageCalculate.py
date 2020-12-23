@@ -11,7 +11,6 @@ import json
 import requests
 import sys
 
-
 params = {
     'sigmaBF': int(sys.argv[1]),
     'phieqCQ': int(sys.argv[2]),
@@ -33,7 +32,7 @@ def variableCalculate(percentage, max, reverse):
             return 1
 
 # Parameters
-filepath = "./public/upload/filename.jpg"
+filepath = "./upload/filename.jpg"
 
 # Bilateral filter
 s = 8
@@ -48,7 +47,7 @@ phie = 5  # typically [0.75,5] controls the sharpness of the activation falloff
 tau = 0.981 # typically [0,1] control the center-sourround difference required for cell activation
 
 def loadingImage():
-    rgb = io.imread('./public/upload/filename.jpg')
+    rgb = io.imread('./upload/filename.jpg')
     lab = color.rgb2lab(rgb) # img_array, RGB-image = MxNx3
     L, a, b = lab[:,:,0], lab[:,:,1], lab[:,:,2]
     m1, n1 = L.shape
@@ -171,7 +170,7 @@ def loadingImage():
 
             pixel[j,i] = int(r), int(g), int(b)
 
-    imageio.imwrite('./public/upload/final.jpg', imgFinal)
+    imageio.imwrite('./upload/final.jpg', imgFinal)
 
 
 loadingImage()

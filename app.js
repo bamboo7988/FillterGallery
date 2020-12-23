@@ -46,13 +46,13 @@ app.post('/upload', function(req, res) {
   let sampleFile = req.files.fileImage;
 
   // Use the mv() method to place the file somewhere on your server
-  sampleFile.mv('./public/upload/filename.jpg', function(err) {
+  sampleFile.mv('./upload/filename.jpg', function(err) {
     if (err){
       return res.status(500).send(err);
     }
-    if (fs.existsSync('./public/upload/final.jpg')){
+    if (fs.existsSync('./upload/final.jpg')){
       // Use the unlink() method to delete the existed final file
-      fs.unlink('./public/upload/final.jpg', function(err){
+      fs.unlink('./upload/final.jpg', function(err){
         if (err){
           return res.status(500).send(err);
         }
@@ -64,9 +64,6 @@ app.post('/upload', function(req, res) {
 
 });
 
-app.post('/', function (req, res) {
-    res.send('Hello World');
-});
 app.get('/call/python', pythonProcess)
 
 function pythonProcess(req, res) {
@@ -91,8 +88,9 @@ function pythonProcess(req, res) {
 
 }
 
-frontApp.get('/',function (req, res) {
-    res.sendFile(path.join(__dirname + '/dist/index.html'));
+console.log(path.join(__dirname + '/index.html'))
+frontApp.post('/',function (req, res) {
+    res.sendFile(path.join(__dirname + '/index.html'));
 });
 
 app.listen(port, function () {

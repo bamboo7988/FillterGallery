@@ -43,6 +43,7 @@
         >
           <v-card>
             <v-img
+              v-if='renderComponent'
               :src="original"
               class="white--text align-end"
               height="400px"
@@ -156,6 +157,8 @@ export default {
       sigmaDE:0,
       loading: false,
       isShow: false,
+      renderComponent:true,
+      version:0
     }),
     computed: {
       getImageUrl: function() {
@@ -165,12 +168,16 @@ export default {
     methods:{
       showImage(file) {
         const formData = new FormData()
+        this.renderComponent = false;
         formData.append('fileImage',file)
          axios.post(`http://127.0.0.1:3000/upload`,formData,{headers: {'Content-Type': 'multipart/form-data'}})
         .then(res =>{
           console.log(res)
+          this.version += 1
+          this.original = '/upload/filename.jpg'+'?version='+this.version
           this.visible = false;
           this.$forceUpdate();
+          this.renderComponent = true;
         })
         .catch(err =>{
           window.console.log(err)
@@ -183,6 +190,8 @@ export default {
           if(res.statusText==='OK'){
             this.loading = false
             this.isShow = true
+            this.version += 1
+            this.final = '/upload/final.jpg'+'?version='+this.version
             this.$forceUpdate();
           }
         })
