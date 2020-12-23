@@ -33,7 +33,7 @@
           ></v-file-input>
         </v-col>
       </v-row>
-      
+
       </v-col>
 
     </v-row>
@@ -60,11 +60,11 @@
                 <v-row>
                     <v-col cols="12">
                       <v-slider
-                        v-model="sigma"
+                        v-model="sigmaBF"
                         step="10"
                         ticks="always"
                         tick-size="4"
-                        label="SIGMA"
+                        label="Bilateral filter"
                         color="blue-grey"
                         track-color="grey"
                         thumb-label
@@ -74,11 +74,11 @@
                 <v-row>
                     <v-col cols="12">
                       <v-slider
-                        v-model="phie"
+                        v-model="phieqCQ"
                         step="10"
                         ticks="always"
                         tick-size="4"
-                        label="PHIE"
+                        label="Color quantization"
                         color="blue-grey"
                         track-color="grey"
                         thumb-label
@@ -88,11 +88,11 @@
                   <v-row>
                     <v-col cols="12">
                       <v-slider
-                          v-model="tau"
+                          v-model="sigmaDE"
                           step="10"
                           ticks="always"
                           tick-size="4"
-                          label="TAU"
+                          label="Dog edge"
                           color="blue-grey"
                           track-color="grey"
                           thumb-label
@@ -127,15 +127,15 @@
         <v-col
           cols="6"
         >
-          <v-card>
+          <v-card v-if="isShow">
             <v-img
               :src="final"
               class="white--text align-end"
-              height="500px"
+              height="400px"
             >
               <v-card-title >運算後圖片</v-card-title>
             </v-img>
-              
+
           </v-card>
         </v-col>
       </v-row>
@@ -150,11 +150,12 @@ export default {
 
     data: () => ({
       original:'/upload/filename.jpg',
-      final:'/images/final.jpg',
-      sigma: 0,
-      phie:0,
-      tau:0,
-      loading: false,  
+      final:'/upload/final.jpg',
+      sigmaBF: 0,
+      phieqCQ:0,
+      sigmaDE:0,
+      loading: false,
+      isShow: false,
     }),
     computed: {
       getImageUrl: function() {
@@ -168,6 +169,7 @@ export default {
          axios.post(`http://127.0.0.1:3000/upload`,formData,{headers: {'Content-Type': 'multipart/form-data'}})
         .then(res =>{
           console.log(res)
+          this.visible = false;
           this.$forceUpdate();
         })
         .catch(err =>{
@@ -176,11 +178,11 @@ export default {
       },
       caculate() {
         this.loading = true
-        axios.get(`${BASE_URL}/call/python?sigma=${this.sigma}&phie=${this.phie}&tau=${this.tau}`)
+        axios.get(`${BASE_URL}/call/python`, {  params: { sigmaBF: this.sigmaBF, phieqCQ: this.phieqCQ, sigmaDE: this.sigmaDE} })
         .then(res =>{
-          console.log(res.data)
           if(res.statusText==='OK'){
             this.loading = false
+            this.isShow = true
             this.$forceUpdate();
           }
         })
@@ -188,7 +190,7 @@ export default {
           window.console.log(err)
         })
       }
-      
+
     }
   }
 </script>
