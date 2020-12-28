@@ -145,7 +145,6 @@
 
 <script>
 import axios from 'axios'
-const BASE_URL = 'http://localhost:3000';
 export default {
     name: 'FilterGallery',
 
@@ -170,7 +169,7 @@ export default {
         const formData = new FormData()
         this.renderComponent = false;
         formData.append('fileImage',file)
-         axios.post(`http://127.0.0.1:3000/upload`,formData,{headers: {'Content-Type': 'multipart/form-data'}})
+         axios.post(`http://140.118.9.57:3000/upload`,formData,{headers: {'Content-Type': 'multipart/form-data'}})
         .then(res =>{
           console.log(res)
           this.version += 1
@@ -185,7 +184,7 @@ export default {
       },
       caculate() {
         this.loading = true
-        axios.get(`${BASE_URL}/call/python`, {  params: { sigmaBF: this.sigmaBF, phieqCQ: this.phieqCQ, sigmaDE: this.sigmaDE} })
+        axios.get(`http://140.118.9.57:3000/call/python`, {  params: { sigmaBF: this.sigmaBF, phieqCQ: this.phieqCQ, sigmaDE: this.sigmaDE} })
         .then(res =>{
           if(res.statusText==='OK'){
             this.loading = false

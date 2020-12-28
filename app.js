@@ -67,6 +67,7 @@ app.post('/upload', function(req, res) {
 app.get('/call/python', pythonProcess)
 
 function pythonProcess(req, res) {
+  console.log('python update')
 
   console.log(`sigmaBF: ${req.query.sigmaBF}, phieqCQ: ${req.query.phieqCQ}, sigmaDE: ${req.query.sigmaDE}`)
 
