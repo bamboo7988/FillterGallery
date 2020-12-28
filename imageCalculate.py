@@ -39,7 +39,7 @@ s = 8
 sigmacolor = sigmaspace = variableCalculate(params['sigmaBF'], 20, False)
 
 # Color quantization
-phieq = variableCalculate(params['phieqCQ'], 40, False)
+phieq = variableCalculate(params['phieqCQ'], 20, False)
 
 # Dog edge detection
 sigma = variableCalculate(params['sigmaDE'], 4, True)
@@ -62,21 +62,6 @@ def loadingImage():
         L = cv2.bilateralFilter(L, s, sigmacolor, sigmaspace)
         a = cv2.bilateralFilter(a, s, sigmacolor, sigmaspace)
         b = cv2.bilateralFilter(b, s, sigmacolor, sigmaspace)
-
-    lab1 = lab
-    lab1[:,:,0] = L
-    lab1[:,:,1] = a
-    lab1[:,:,2] = b
-    rgbBF = color.lab2rgb(lab1)
-
-    ImgBF = Image.new( 'RGB', (n1,m1),'black')
-    pixel = ImgBF.load()
-
-    for i in range(m1):
-        for j in range(n1):
-            pixel[j,i] = int(255*rgbBF[i,j,0]),int(255*rgbBF[i,j,1]),int(255*rgbBF[i,j,2])
-
-    # imageio.imwrite('bilateral filtered image.jpg',ImgBF)
 
     def qnearest(f):
         q=0
@@ -104,29 +89,6 @@ def loadingImage():
             q=100
         return q
 
-    Quantum = np.zeros((m1, n1))
-    for i in range(m1):
-        for j in range(n1):
-            Quantum[i,j]=qnearest(L[i,j])+5*tanh((L[i,j]-qnearest(L[i,j]))/phieq)
-
-
-    L = Quantum
-    lab2 = lab
-
-    lab2[:,:,0] = L
-    lab2[:,:,1] = a
-    lab2[:,:,2] = b
-
-    rgbCQ = color.lab2rgb(lab2)
-
-    imgCQ = Image.new( 'RGB', (n1, m1),'black')
-    pixel = imgCQ.load()
-    for i in range(m1):
-        for j in range(n1):
-            pixel[j,i]=int(255*rgbCQ[i,j,0]),int(255*rgbCQ[i,j,1]),int(255*rgbCQ[i,j,2])
-
-    # imageio.imwrite('color quantized image.jpg',imgCQ)
-
     def gauss2D(shape,sigma):
         m,n = [(ss-1.)/2. for ss in shape]
         y,x = np.ogrid[-m:m+1,-n:n+1]
@@ -136,18 +98,22 @@ def loadingImage():
         if sumh != 0:
             h /= sumh
         return h
+    
+    Quantum = np.zeros((m1, n1))
     imge = signal.convolve(L0, gauss2D((5,5),sigma), mode = 'same')
     imgr = signal.convolve(L0, gauss2D((5,5),sigma * 1.5), mode = 'same')
 
     for i in range(m1):
         for j in range(n1):
+            Quantum[i,j]=qnearest(L[i,j])+5*tanh((L[i,j]-qnearest(L[i,j]))/phieq)
+            
             if imge[i,j] - tau * imgr[i,j] > 0:
                 D[i,j] = 1
             else:
                 D[i,j] = 1 + tanh((imge[i,j] - tau * imgr[i,j]) * phie)
 
 
-    # imageio.imwrite('edges.jpg',D)
+    L = Quantum
 
     lab3 = lab
     lab3[:,:,0] = L
