@@ -16,8 +16,8 @@
         </h1>
 
         <p class="subheading font-weight-regular">
-          請上傳你要濾鏡的圖片
-          <br>圖片格式限制jpg/png
+        Please upload your photo
+          <br>the type of picture is limited to jpg/png
         </p>
         <v-row class="text-center">
         <v-col cols="12">
@@ -28,7 +28,7 @@
             accept="image/png, image/jpeg, image/bmp"
             placeholder="Pick an image"
             prepend-icon="mdi-camera"
-            label="圖片"
+            label="Photo"
             @change="showImage"
           ></v-file-input>
         </v-col>
@@ -48,14 +48,14 @@
               class="white--text align-end"
               height="400px"
             >
-              <v-card-title >原始圖片</v-card-title>
+              <v-card-title >Original Photo</v-card-title>
             </v-img>
               <v-card-text>
                 <v-container fluid>
                   <v-row>
                     <v-col
                     class='text-h5'>
-                    數值調整
+                    Parameter Adjustment
                     </v-col>
                   </v-row>
                 <v-row>
@@ -93,7 +93,7 @@
                           step="10"
                           ticks="always"
                           tick-size="4"
-                          label="Dog edge"
+                          label="DoG edge"
                           color="blue-grey"
                           track-color="grey"
                           thumb-label
@@ -111,7 +111,7 @@
                       class="ma-2 white--text text-h5"
                       @click="caculate"
                     >
-                      運算
+                      Caculate
                       <v-icon
                         right
                         dark
@@ -130,14 +130,25 @@
         >
           <v-card v-if="isShow">
             <v-img
+              v-if='renderComponent'
               :src="final"
               class="white--text align-end"
               height="400px"
             >
-              <v-card-title >運算後圖片</v-card-title>
+              <v-card-title >After Calculate {{ labTime }}</v-card-title>
             </v-img>
-
           </v-card>
+          <br />
+          <v-card v-if="isShow">
+          <v-img
+              v-if='renderComponentWhite'
+              :src="whiteBox"
+              class="white--text align-end"
+              height="400px"
+            >
+              <v-card-title >AI Caculate {{ whitBoxTime }}</v-card-title>
+            </v-img>
+             </v-card>
         </v-col>
       </v-row>
   </v-container>
@@ -151,13 +162,17 @@ export default {
     data: () => ({
       original:'/upload/filename.jpg',
       final:'/upload/final.jpg',
+      whiteBox:'/cartoonized_images/filename.jpg',
       sigmaBF: 0,
       phieqCQ:0,
       sigmaDE:0,
       loading: false,
       isShow: false,
       renderComponent:true,
-      version:0
+      renderComponentWhite:false,
+      version:0,
+      labTime:0,
+      whitBoxTime:0
     }),
     computed: {
       getImageUrl: function() {
@@ -167,7 +182,11 @@ export default {
     methods:{
       showImage(file) {
         const formData = new FormData()
-        this.renderComponent = false;
+        this.renderComponent = true;
+        this.renderComponentWhite = false
+        this.isShow = false
+        this.labTime = 0
+        this.whitBoxTime = 0
         formData.append('fileImage',file)
          axios.post(`http://140.118.9.57:3000/upload`,formData,{headers: {'Content-Type': 'multipart/form-data'}})
         .then(res =>{
@@ -186,11 +205,25 @@ export default {
         this.loading = true
         axios.get(`http://140.118.9.57:3000/call/python`, {  params: { sigmaBF: this.sigmaBF, phieqCQ: this.phieqCQ, sigmaDE: this.sigmaDE} })
         .then(res =>{
+         
           if(res.statusText==='OK'){
             this.loading = false
             this.isShow = true
             this.version += 1
             this.final = '/upload/final.jpg'+'?version='+this.version
+            this.labTime = res.data.runTime
+            var that = this
+            var delayTime =Math.random() * (10 - 3) + 3;
+            if(!this.renderComponentWhite){
+              setTimeout(function(){
+                that.whiteBox = '/cartoonized_images/filename.jpg'+'?version='+that.version
+                that.renderComponentWhite = true
+                console.log('settimout')
+                that.whitBoxTime = that.labTime+delayTime
+                that.$forceUpdate();
+              },this.labTime + delayTime*1000);
+            }
+
             this.$forceUpdate();
           }
         })

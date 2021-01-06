@@ -67,8 +67,6 @@ app.post('/upload', function(req, res) {
 app.get('/call/python', pythonProcess)
 
 function pythonProcess(req, res) {
-  console.log('python update')
-
   console.log(`sigmaBF: ${req.query.sigmaBF}, phieqCQ: ${req.query.phieqCQ}, sigmaDE: ${req.query.sigmaDE}`)
 
   let spawn = require("child_process").spawn
@@ -79,6 +77,11 @@ function pythonProcess(req, res) {
     req.query.phieqCQ,
     req.query.sigmaDE
   ])
+
+  spawn('python', [
+    "./cartoonize.py"
+  ])
+  console.log('python')
 
   process.stdout.on('data', (data) => {
     const parsedString = JSON.parse(data)

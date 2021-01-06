@@ -1,3 +1,4 @@
+import json
 from cv2 import cv2
 import matplotlib.pyplot as plt
 from skimage import io,color
@@ -7,9 +8,10 @@ import imageio
 from math import tanh
 from scipy import signal
 import os
-import json
 import requests
 import sys
+from numba import jit
+import time
 
 params = {
     'sigmaBF': int(sys.argv[1]),
@@ -39,7 +41,7 @@ s = 8
 sigmacolor = sigmaspace = variableCalculate(params['sigmaBF'], 20, False)
 
 # Color quantization
-phieq = variableCalculate(params['phieqCQ'], 20, False)
+phieq = variableCalculate(params['phieqCQ'], 16, False)
 
 # Dog edge detection
 sigma = variableCalculate(params['sigmaDE'], 4, True)
@@ -52,42 +54,12 @@ def loadingImage():
     L, a, b = lab[:,:,0], lab[:,:,1], lab[:,:,2]
     m1, n1 = L.shape
     L0 = np.float32(L)
+    Quantum = np.zeros((m1, n1))
     D = np.zeros((m1,n1))
 
     L = np.float32(L)
     a = np.float32(a)
     b = np.float32(b)
-
-    for i in range(3): # channel = 3, line 43
-        L = cv2.bilateralFilter(L, s, sigmacolor, sigmaspace)
-        a = cv2.bilateralFilter(a, s, sigmacolor, sigmaspace)
-        b = cv2.bilateralFilter(b, s, sigmacolor, sigmaspace)
-
-    def qnearest(f):
-        q=0
-        if f>=0 and f<5:
-            q=0
-        elif f>=5 and f<15:
-            q=10
-        elif f>=15 and f<25:
-            q=20
-        elif f>=25 and f<35:
-            q=30
-        elif f>=35 and f<45:
-            q=40
-        elif f>=45 and f<55:
-            q=50
-        elif f>=55 and f<65:
-            q=60
-        elif f>=65 and f<75:
-            q=70
-        elif f>=75 and f<85:
-            q=80
-        elif f>=85 and f<95:
-            q=90
-        elif f>=95 and f<100:
-            q=100
-        return q
 
     def gauss2D(shape,sigma):
         m,n = [(ss-1.)/2. for ss in shape]
@@ -98,19 +70,59 @@ def loadingImage():
         if sumh != 0:
             h /= sumh
         return h
-    
-    Quantum = np.zeros((m1, n1))
     imge = signal.convolve(L0, gauss2D((5,5),sigma), mode = 'same')
     imgr = signal.convolve(L0, gauss2D((5,5),sigma * 1.5), mode = 'same')
 
+    
+    for i in range(3): # channel = 3, line 43
+        L = cv2.bilateralFilter(L, s, sigmacolor, sigmaspace)
+        a = cv2.bilateralFilter(a, s, sigmacolor, sigmaspace)
+        b = cv2.bilateralFilter(b, s, sigmacolor, sigmaspace)
+
+
+    
+    @jit(nopython=True)
+    def CQCalculate(input):
+        def qnearest(f):
+            q=0
+            if f>=0 and f<5:
+                q=0
+            elif f>=5 and f<15:
+                q=10
+            elif f>=15 and f<25:
+                q=20
+            elif f>=25 and f<35:
+                q=30
+            elif f>=35 and f<45:
+                q=40
+            elif f>=45 and f<55:
+                q=50
+            elif f>=55 and f<65:
+                q=60
+            elif f>=65 and f<75:
+                q=70
+            elif f>=75 and f<85:
+                q=80
+            elif f>=85 and f<95:
+                q=90
+            elif f>=95 and f<100:
+                q=100
+            return q
+
+        return qnearest(input)+5*tanh((input-qnearest(input))/phieq)
+
+    @jit(nopython=True)
+    def DoGCalculate(a, b):
+        if a - tau * b > 0:
+            return 1
+        else:
+            return 1 + tanh((a - tau * b) * phie)
+
     for i in range(m1):
-        for j in range(n1):
-            Quantum[i,j]=qnearest(L[i,j])+5*tanh((L[i,j]-qnearest(L[i,j]))/phieq)
-            
-            if imge[i,j] - tau * imgr[i,j] > 0:
-                D[i,j] = 1
-            else:
-                D[i,j] = 1 + tanh((imge[i,j] - tau * imgr[i,j]) * phie)
+            for j in range(n1):
+                Quantum[i,j]=CQCalculate(L[i,j])
+
+                D[i,j] = DoGCalculate(imge[i,j], imgr[i,j])
 
 
     L = Quantum
@@ -139,12 +151,17 @@ def loadingImage():
     imageio.imwrite('./upload/final.jpg', imgFinal)
 
 
+st3 = time.time()
 loadingImage()
+st4 = time.time()
+
+runtime = st4 -st3
 
 resultList = {
     'sigmaBF': sigmacolor,
     'phieqCQ': phieq,
     'sigmaDE': sigma,
+    'runTime': runtime,
     'isOk': True,
     'message': 'Image calculate success'
 }
